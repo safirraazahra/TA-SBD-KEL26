@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERD - PrintHub</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #f0f4ff 0%, #faf0ff 100%);
+    min-height: 100vh;
+    padding: 30px 20px;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+  .page-header p { color: #6b7280; font-size: 14px; }
+
+  .erd-container {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 60px rgba(99,102,241,0.12);
+    max-width: 1300px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ACTORS */
+  .actors-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 40px;
+    gap: 20px;
+  }
+  .actor {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 90px;
+  }
+  .actor-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+    position: relative;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  }
+  .actor-icon.buyer { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+  .actor-icon.seller { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .actor-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1f2937;
+    text-align: center;
+  }
+  .actor-sublabel {
+    font-size: 10px;
+    color: #6b7280;
+    text-align: center;
+    background: #f3f4f6;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  /* TABLES GRID */
+  .tables-area {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 20px 30px;
+  }
+
+  .table-card {
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 2px solid transparent;
+    transition: transform 0.2s;
+  }
+  .table-card:hover { transform: translateY(-2px); }
+
+  .table-header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .table-icon { font-size: 18px; }
+  .table-name { font-size: 14px; font-weight: 800; color: white; }
+  .table-note { font-size: 10px; color: rgba(255,255,255,0.8); margin-left: auto; background: rgba(0,0,0,0.15); padding: 2px 8px; border-radius: 10px; }
+
+  .table-body { background: white; }
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 12px;
+  }
+  .field-row:last-child { border-bottom: none; }
+  .field-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 6px;
+    min-width: 28px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .pk  { background: #fef3c7; color: #92400e; }
+  .fk  { background: #dbeafe; color: #1e40af; }
+  .idx { background: #f3e8ff; color: #6d28d9; }
+  .field-name { font-weight: 600; color: #1f2937; font-family: 'Courier New', monospace; }
+  .field-type { color: #9ca3af; font-size: 11px; margin-left: auto; font-family: 'Courier New', monospace; }
+  .field-desc { color: #6b7280; font-size: 10px; }
+
+  /* Table colors */
+  .users .table-header     { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+  .services .table-header  { background: linear-gradient(135deg, #10b981, #059669); }
+  .orders .table-header    { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .order_items .table-header { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  .payments .table-header  { background: linear-gradient(135deg, #06b6d4, #0284c7); }
+
+  .users     { border-color: #a5b4fc; grid-column: 2; grid-row: 1; }
+  .services  { border-color: #6ee7b7; grid-column: 1; grid-row: 2; }
+  .orders    { border-color: #fcd34d; grid-column: 2; grid-row: 2; }
+  .payments  { border-color: #67e8f9; grid-column: 3; grid-row: 2; }
+  .order_items { display: none; }
+
+  /* Relationships SVG area */
+  .relation-svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* Cardinality legend */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #f3f4f6;
+    justify-content: center;
+    align-items: center;
+  }
+  .legend-title { font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #374151;
+  }
+  .legend-line {
+    width: 40px;
+    height: 2px;
+    border-top: 2px dashed #9ca3af;
+  }
+  .legend-line.solid { border-top-style: solid; }
+
+  /* Relationship diagram below */
+  .relation-diagram {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px dashed #e5e7eb;
+  }
+  .relation-title {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .relation-flow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+  .rel-node {
+    text-align: center;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    min-width: 100px;
+  }
+  .rel-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 8px;
+    min-width: 80px;
+  }
+  .rel-arrow-line {
+    height: 2px;
+    background: #9ca3af;
+    width: 100%;
+    position: relative;
+  }
+  .rel-arrow-line::after {
+    content: '▶';
+    position: absolute;
+    right: -8px;
+    top: -8px;
+    font-size: 12px;
+    color: #9ca3af;
+  }
+  .rel-cardinality {
+    font-size: 10px;
+    color: #6b7280;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  /* Additional: Order Items inline */
+  .order-items-inline {
+    margin-top: 20px;
+  }
+
+  /* Footer note */
+  .footer-note {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 11px;
+    color: #9ca3af;
+  }
+
+  /* Full layout with SVG connections */
+  .erd-wrapper {
+    position: relative;
+  }
+
+  /* Constraint badges */
+  .constraint-section {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .constraint-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .constraint-badge.fk-badge { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+  .constraint-badge.sd-badge { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+  .constraint-badge.uq-badge { background: #f3e8ff; color: #6d28d9; border: 1px solid #e9d5ff; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>📄 Entity Relationship Diagram</h1>
+  <p>PrintHub — Sistem Pemesanan Jasa Print & Fotocopy Online</p>
+</div>
+
+<div class="erd-container">
+
+  <!-- ACTORS ROW -->
+  <div class="actors-row">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <div class="actor">
+        <div class="actor-icon buyer">👤</div>
+        <div class="actor-label">BUYER</div>
+        <div class="actor-sublabel">Pembeli</div>
+      </div>
+      <div style="font-size:11px;color:#6b7280;text-align:center;max-width:120px;margin-top:6px;">
+        • Daftar & login<br>• Jelajahi layanan<br>• Buat pesanan<br>• Upload bukti bayar<br>• Batalkan pesanan
+      </div>
+    </div>
+
+    <div style="flex:1;text-align:center;padding-top:20px;">
+      <div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:8px;">RELASI AKTOR → SISTEM</div>
+      <div style="display:flex;justify-content:center;gap:30px;flex-wrap:wrap;">
+        <div style="background:#eff6ff;border:2px solid #bfdbfe;border-radius:10px;padding:8px 16px;font-size:11px;color:#1e40af;font-weight:600;">
+          BUYER →<br><span style="font-weight:400">melakukan</span> Orders
+        </div>
+        <div style="background:#f0fdf4;border:2px solid #bbf7d0;border-radius:10px;padding:8px 16px;font-size:11px;color:#166534;font-weight:600;">
+          SELLER →<br><span style="font-weight:400">mengelola</span> Services
+        </div>
+        <div style="background:#fefce8;border:2px solid #fef08a;border-radius:10px;padding:8px 16px;font-size:11px;color:#854d0e;font-weight:600;">
+          SELLER →<br><span style="font-weight:400">memproses</span> Orders
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <div class="actor">
+        <div class="actor-icon seller">🏪</div>
+        <div class="actor-label">SELLER</div>
+        <div class="actor-sublabel">Penjual</div>
+      </div>
+      <div style="font-size:11px;color:#6b7280;text-align:center;max-width:120px;margin-top:6px;">
+        • Daftar & login<br>• Kelola layanan<br>• Terima pesanan<br>• Update status<br>• Lihat laporan
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLES -->
+  <div style="border-top:2px dashed #e5e7eb;margin-bottom:24px;"></div>
+  <div style="font-size:13px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;text-align:center;">📊 Struktur Database</div>
+
+  <!-- All 5 tables in layout -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
+
+    <!-- USERS -->
+    <div class="table-card users" style="border-color:#a5b4fc;">
+      <div class="table-header" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+        <span class="table-icon">👥</span>
+        <span class="table-name">users</span>
+        <span class="table-note">2 Aktor</span>
+      </div>
+      <div class="table-body">
+        <div class="field-row"><span class="field-badge pk">PK</span><span class="field-name">id</span><span class="field-type">bigint</span></div>
+        <div class="field-row"><span class="field-badge uq-badge" style="font-size:9px;padding:2px 4px;">UQ</span><span class="field-name">email</span><span class="field-type">varchar(255)</span></div>
+        <div class="field-row"><span class="field-badge idx">IDX</span><span class="field-name">role</span><span class="field-type">enum(buyer,seller)</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">name</span><span class="field-type">varchar(255)</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">phone</span><span class="field-type">varchar(20)</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">address</span><span class="field-type">text</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">store_name</span><span class="field-type">varchar (nullable)</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">password</span><span class="field-type">varchar(255)</span></div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="table-card orders" style="border-color:#fcd34d;">
+      <div class="table-header" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+        <span class="table-icon">📋</span>
+        <span class="table-name">orders</span>
+        <span class="table-note">Soft Delete ✓</span>
+      </div>
+      <div class="table-body">
+        <div class="field-row"><span class="field-badge pk">PK</span><span class="field-name">id</span><span class="field-type">bigint</span></div>
+        <div class="field-row"><span class="field-badge fk">FK</span><span class="field-name">buyer_id</span><span class="field-type">→ users.id</span></div>
+        <div class="field-row"><span class="field-badge fk">FK</span><span class="field-name">seller_id</span><span class="field-type">→ users.id</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">order_code</span><span class="field-type">varchar(50) UQ</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">status</span><span class="field-type">enum</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">total_price</span><span class="field-type">decimal(12,2)</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">payment_method</span><span class="field-type">varchar</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">payment_status</span><span class="field-type">enum</span></div>
+        <div class="field-row" style="background:#fff7ed;"><span class="field-badge sd-badge" style="font-size:9px;background:#fef3c7;color:#92400e;padding:2px 4px;">SD</span><span class="field-name" style="color:#d97706;">deleted_at</span><span class="field-type">timestamp null</span></div>
+      </div>
+    </div>
+
+    <!-- SERVICES -->
+    <div class="table-card services" style="border-color:#6ee7b7;">
+      <div class="table-header" style="background:linear-gradient(135deg,#10b981,#059669);">
+        <span class="table-icon">🖨️</span>
+        <span class="table-name">services</span>
+        <span class="table-note">Hard Delete ✓</span>
+      </div>
+      <div class="table-body">
+        <div class="field-row"><span class="field-badge pk">PK</span><span class="field-name">id</span><span class="field-type">bigint</span></div>
+        <div class="field-row"><span class="field-badge fk">FK</span><span class="field-name">seller_id</span><span class="field-type">→ users.id</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">name</span><span class="field-type">varchar(255)</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">category</span><span class="field-type">varchar(50)</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">price_per_unit</span><span class="field-type">decimal(10,2)</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">unit</span><span class="field-type">varchar(50)</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">min_order</span><span class="field-type">int</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">is_active</span><span class="field-type">boolean</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Row 2: order_items + payments -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:720px;margin:0 auto 20px;">
+
+    <!-- ORDER_ITEMS -->
+    <div class="table-card order_items" style="display:block;border-color:#fca5a5;">
+      <div class="table-header" style="background:linear-gradient(135deg,#ef4444,#dc2626);">
+        <span class="table-icon">📦</span>
+        <span class="table-name">order_items</span>
+        <span class="table-note">Pivot</span>
+      </div>
+      <div class="table-body">
+        <div class="field-row"><span class="field-badge pk">PK</span><span class="field-name">id</span><span class="field-type">bigint</span></div>
+        <div class="field-row"><span class="field-badge fk">FK</span><span class="field-name">order_id</span><span class="field-type">→ orders.id</span></div>
+        <div class="field-row"><span class="field-badge fk">FK</span><span class="field-name">service_id</span><span class="field-type">→ services.id</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">quantity</span><span class="field-type">int</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">unit_price</span><span class="field-type">decimal(10,2)</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">subtotal</span><span class="field-type">decimal(12,2)</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">notes</span><span class="field-type">text (nullable)</span></div>
+      </div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div class="table-card payments" style="border-color:#67e8f9;">
+      <div class="table-header" style="background:linear-gradient(135deg,#06b6d4,#0284c7);">
+        <span class="table-icon">💳</span>
+        <span class="table-name">payments</span>
+        <span class="table-note">1:1 Orders</span>
+      </div>
+      <div class="table-body">
+        <div class="field-row"><span class="field-badge pk">PK</span><span class="field-name">id</span><span class="field-type">bigint</span></div>
+        <div class="field-row"><span class="field-badge fk">FK</span><span class="field-name">order_id</span><span class="field-type">→ orders.id</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">method</span><span class="field-type">varchar(50)</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">amount</span><span class="field-type">decimal(12,2)</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">status</span><span class="field-type">enum</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">proof_path</span><span class="field-type">varchar (nullable)</span></div>
+        <div class="field-row" style="padding-left:14px;"><span class="field-name" style="color:#6b7280;">verified_at</span><span class="field-type">timestamp null</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RELATIONSHIPS DIAGRAM -->
+  <div style="border-top:2px dashed #e5e7eb;padding-top:20px;margin-top:10px;">
+    <div class="relation-title">🔗 Diagram Relasi Antar Tabel</div>
+
+    <div style="display:flex;justify-content:center;align-items:center;gap:0;flex-wrap:wrap;">
+      <!-- users -->
+      <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;">
+        users<br><small style="font-weight:400;font-size:10px;">PK: id</small>
+      </div>
+      <!-- arrow to orders (buyer) -->
+      <div style="display:flex;flex-direction:column;align-items:center;padding:0 6px;">
+        <div style="font-size:10px;color:#6b7280;font-weight:600;">1</div>
+        <div style="height:2px;width:60px;background:#9ca3af;position:relative;">
+          <span style="position:absolute;right:-6px;top:-7px;font-size:12px;color:#9ca3af;">▶</span>
+        </div>
+        <div style="font-size:10px;color:#6b7280;font-weight:600;">N (buyer)</div>
+      </div>
+      <!-- orders -->
+      <div style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;">
+        orders<br><small style="font-weight:400;font-size:10px;">FK: buyer_id, seller_id</small>
+      </div>
+      <!-- arrow to order_items -->
+      <div style="display:flex;flex-direction:column;align-items:center;padding:0 6px;">
+        <div style="font-size:10px;color:#6b7280;font-weight:600;">1</div>
+        <div style="height:2px;width:60px;background:#9ca3af;position:relative;">
+          <span style="position:absolute;right:-6px;top:-7px;font-size:12px;color:#9ca3af;">▶</span>
+        </div>
+        <div style="font-size:10px;color:#6b7280;font-weight:600;">N</div>
+      </div>
+      <!-- order_items -->
+      <div style="background:linear-gradient(135deg,#ef4444,#dc2626);color:white;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;">
+        order_items<br><small style="font-weight:400;font-size:10px;">FK: order_id, service_id</small>
+      </div>
+      <!-- arrow to services (reverse) -->
+      <div style="display:flex;flex-direction:column;align-items:center;padding:0 6px;">
+        <div style="font-size:10px;color:#6b7280;font-weight:600;">N</div>
+        <div style="height:2px;width:60px;background:#9ca3af;position:relative;">
+          <span style="position:absolute;left:-6px;top:-7px;font-size:12px;color:#9ca3af;">◀</span>
+        </div>
+        <div style="font-size:10px;color:#6b7280;font-weight:600;">1</div>
+      </div>
+      <!-- services -->
+      <div style="background:linear-gradient(135deg,#10b981,#059669);color:white;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;">
+        services<br><small style="font-weight:400;font-size:10px;">FK: seller_id</small>
+      </div>
+    </div>
+
+    <!-- payments row -->
+    <div style="display:flex;justify-content:center;align-items:center;gap:0;margin-top:16px;">
+      <div style="width:90px;"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;padding:0 6px;">
+        <div style="width:2px;height:30px;background:#9ca3af;position:relative;">
+          <span style="position:absolute;bottom:-8px;left:-5px;font-size:12px;color:#9ca3af;">▼</span>
+        </div>
+        <div style="font-size:9px;color:#6b7280;font-weight:600;margin-top:10px;">1 : 1</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#06b6d4,#0284c7);color:white;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;margin-left:10px;">
+        payments<br><small style="font-weight:400;font-size:10px;">FK: order_id</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Constraints & Legend -->
+  <div style="border-top:2px dashed #e5e7eb;padding-top:20px;margin-top:20px;">
+    <div class="relation-title">📌 Keterangan Constraint & Notasi</div>
+
+    <div class="constraint-section">
+      <div class="constraint-badge fk-badge">🔑 FK — Foreign Key Constraint</div>
+      <div class="constraint-badge sd-badge">🗑️ SD — Soft Delete (deleted_at)</div>
+      <div class="constraint-badge uq-badge">⬡ UQ — Unique Constraint</div>
+      <div class="constraint-badge" style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;">✅ PK — Primary Key</div>
+      <div class="constraint-badge" style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;">🔗 IDX — Index</div>
+    </div>
+
+    <div style="margin-top:16px;display:flex;flex-wrap:wrap;justify-content:center;gap:12px;">
+      <div style="font-size:11px;color:#374151;background:#f9fafb;padding:6px 14px;border-radius:8px;border:1px solid #e5e7eb;">
+        <strong>users.role = 'buyer'</strong> → Pembeli (Aktor 1)
+      </div>
+      <div style="font-size:11px;color:#374151;background:#f9fafb;padding:6px 14px;border-radius:8px;border:1px solid #e5e7eb;">
+        <strong>users.role = 'seller'</strong> → Penjual (Aktor 2)
+      </div>
+      <div style="font-size:11px;color:#374151;background:#f9fafb;padding:6px 14px;border-radius:8px;border:1px solid #e5e7eb;">
+        <strong>orders.buyer_id</strong> → FK → users.id (CASCADE)
+      </div>
+      <div style="font-size:11px;color:#374151;background:#f9fafb;padding:6px 14px;border-radius:8px;border:1px solid #e5e7eb;">
+        <strong>orders.seller_id</strong> → FK → users.id (CASCADE)
+      </div>
+      <div style="font-size:11px;color:#374151;background:#f9fafb;padding:6px 14px;border-radius:8px;border:1px solid #e5e7eb;">
+        <strong>order_items.order_id</strong> → FK → orders.id
+      </div>
+      <div style="font-size:11px;color:#374151;background:#f9fafb;padding:6px 14px;border-radius:8px;border:1px solid #e5e7eb;">
+        <strong>order_items.service_id</strong> → FK → services.id
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    PrintHub · ERD · 5 Tabel · 2 Aktor · Laravel 11 + MySQL 8 · {{ date('Y') if false else '2026' }}
+  </div>
+
+</div>
+
+</body>
+</html>
