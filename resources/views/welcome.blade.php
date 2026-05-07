@@ -62,8 +62,8 @@
                         <div class="text-center"><p class="text-3xl font-bold">10K+</p><p class="text-white/70 text-sm">Pesanan</p></div>
                     </div>
                 </div>
-                <div class="hidden lg:flex justify-center">
-                    <div class="w-80 h-80 bg-white/10 rounded-3xl backdrop-blur-sm p-8 border border-white/20 space-y-4">
+                <div class="hidden lg:flex justify-center items-center h-full">
+                    <div class="w-80 h-80 bg-white/10 rounded-3xl backdrop-blur-sm border border-white/20 flex flex-col justify-center px-8 space-y-4">
                         <div class="flex items-center gap-3 bg-white/20 rounded-2xl p-4">
                             <div class="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center"><i class="fas fa-file-alt text-white"></i></div>
                             <div><p class="text-white font-semibold text-sm">Skripsi.pdf</p><p class="text-white/60 text-xs">120 halaman • Jilid soft cover</p></div>
