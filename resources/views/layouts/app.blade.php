@@ -118,7 +118,7 @@
 
 <!-- Flash Messages -->
 @if(session('success'))
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4" id="flash-msg">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4" id="flash-msg">
     <div class="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl text-green-800">
         <i class="fas fa-check-circle text-green-500 text-lg"></i>
         <span class="text-sm font-medium">{{ session('success') }}</span>
@@ -129,7 +129,7 @@
 </div>
 @endif
 @if(session('error'))
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4" id="flash-error">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4" id="flash-error">
     <div class="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800">
         <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
         <span class="text-sm font-medium">{{ session('error') }}</span>

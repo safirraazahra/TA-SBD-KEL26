@@ -17,7 +17,7 @@
                 <input type="text" name="q" value="{{ $query }}" placeholder="Cari layanan, misal: print A4, fotocopy..."
                     class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400">
             </div>
-            <select name="category" class="px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+            <select name="category" class="px-6 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white min-w-[180px]">
                 <option value="">Semua Kategori</option>
                 <option value="print_hitam_putih" {{ $category === 'print_hitam_putih' ? 'selected' : '' }}>Print Hitam Putih</option>
                 <option value="print_berwarna" {{ $category === 'print_berwarna' ? 'selected' : '' }}>Print Berwarna</option>
