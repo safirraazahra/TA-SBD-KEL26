@@ -48,3 +48,5 @@ class BuyerController extends Controller
         return view('buyer.services.show', compact('service'));
     }
 }
+
+// tAMBAHAN
